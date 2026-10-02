@@ -64,3 +64,40 @@ PR из LR1 в main.
 ## Вывод
 
 В ходе работы настроена автоматическая сборка Unity WebGL через CLI.
+
+## Лабораторная работа №2. CI/CD через GitHub Actions
+
+### Шаг 1. Резервный репозиторий
+
+![Резервный репозиторий] ![alt text](screenshots/092731.png)
+
+### Шаг 2. PAT-токен
+
+![Настройки PAT]![alt text](screenshots/093019.png)
+
+### Шаг 3. Секрет BACKUP_TOKEN
+
+![Секрет] ![alt text](screenshots/093457.png)
+
+### Шаг 4. YAML-пайплайн
+
+Файл: `.github/workflows/main.yml`
+![YAML](screenshots/094115.png)
+
+### Шаг 5. Pull Request
+
+![alt text](screenshots/094421.png)
+![alt text](screenshots/094524.png)
+![alt text](screenshots/094603.png)
+
+### Шаг 6. Запуск workflow
+
+![alt text](screenshots/094806.png)
+
+### Шаг 7. Зеркалирование
+
+![alt text](screenshots/094916.png)
+
+### Вывод
+
+Настроен CI/CD пайплайн GitHub Actions: sanity check структуры проекта и автоматическое зеркалирование кода в резервный репозиторий через PAT-токен.
