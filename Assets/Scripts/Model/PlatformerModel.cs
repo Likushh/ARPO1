@@ -1,5 +1,7 @@
 using Platformer.Mechanics;
 using UnityEngine;
+using UnityEngine.InputSystem;
+using Unity.Cinemachine;
 
 namespace Platformer.Model
 {

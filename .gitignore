@@ -9,3 +9,7 @@
 *.pidb
 build_webgl.log
 Builds/
+
+# Visual Studio
+.vs/
+*.slnx
