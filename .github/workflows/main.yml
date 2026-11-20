@@ -71,7 +71,7 @@ jobs:
         env:
           BACKUP_TOKEN: ${{ secrets.BACKUP_TOKEN }}
         run: |
-          git push --force https://x-access-token:${{ secrets.BACKUP_TOKEN }}@github.com/Likushh/ARPO1.git master
+          git push --force https://x-access-token:${{ secrets.BACKUP_TOKEN }}@github.com/Likushh/ARPO1-Backup.git main
 
   build_docker_image:
     needs: run_tests # ТЕПЕРЬ ЗАВИСИТ ОТ ТЕСТОВ
@@ -107,5 +107,5 @@ jobs:
           file: ./Dockerfile
           push: true
           tags: |
-            ghcr.io/Likushh/platformer-game:latest
-            ghcr.io/Likushh/platformer-game:${{ github.sha }}
+            ghcr.io/likushh/platformer-game:latest
+            ghcr.io/likushh/platformer-game:${{ github.sha }}
