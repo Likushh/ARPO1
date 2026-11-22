@@ -35,7 +35,7 @@ public class Variant2_DecrementTests
 
         // 6. Проверяем, что здоровье уменьшилось ровно на 1 (стало 2)
         int hpAfter = (int)hpField.GetValue(health);
-        Assert.AreEqual(1, hpAfter, "Ошибка: Decrement() должен уменьшать здоровье ровно на 1!");
+        Assert.AreEqual(2, hpAfter, "Ошибка: Decrement() должен уменьшать здоровье ровно на 1!");
 
         // 7. Убираем за собой (используем DestroyImmediate, так как тест может быть в EditMode)
         Object.DestroyImmediate(playerObj);
