@@ -2,9 +2,10 @@ name: Unity 2D Platformer CI/CD
 
 on:
   push:
-    branches: ["main", "master"] # На случай, если основная ветка называется main
+    branches: ["main", "master"]
 
 jobs:
+  # ЗАДАЧА 1: Проверка структуры проекта
   sanity_check:
     runs-on: ubuntu-latest
     steps:
@@ -16,7 +17,7 @@ jobs:
           if [ -d "ProjectSettings" ]; then echo "ProjectSettings найден."; else echo "Ошибка!" && exit 1; fi
           if [ -d "Packages" ]; then echo "Packages найден."; else echo "Ошибка!" && exit 1; fi
 
-  # ЭТАП ЛР №4: ЗАПУСК ТЕСТОВ
+  # ЗАДАЧА 2: Запуск тестов (из ЛР №4)
   run_tests:
     needs: sanity_check
     runs-on: ubuntu-latest
@@ -57,8 +58,42 @@ jobs:
           name: test-results
           path: artifacts/
 
+  # НОВЫЙ ЭТАП (ЛР №5): Настоящая компиляция игры в облаке
+  build_game:
+    needs: run_tests
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Build-${{ hashFiles('Packages/packages-lock.json', 'Assets/**/*.asmdef') }}
+
+      - name: Build WebGL Player
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: WebGL
+          buildMethod: BuildManager.BuildWebGL
+          unityVersion: 6000.3.11f1
+
+      - name: Upload WebGL Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: WebGL-Build
+          path: Builds/WebGL
+
+  # ЗАДАЧА 3: Зеркалирование (из ЛР №2)
   mirror_repo:
-    needs: run_tests # ТЕПЕРЬ ЗАВИСИТ ОТ ТЕСТОВ
+    needs: run_tests
+    if: github.repository == 'Likushh/2d_platformer' # Замените, если репозиторий называется иначе
     runs-on: ubuntu-latest
     steps:
       - name: Checkout full history
@@ -71,10 +106,11 @@ jobs:
         env:
           BACKUP_TOKEN: ${{ secrets.BACKUP_TOKEN }}
         run: |
-          git push --force https://x-access-token:${{ secrets.BACKUP_TOKEN }}@github.com/Likushh/ARPO1-Backup.git main
+          git push --force https://x-access-token:${{ secrets.BACKUP_TOKEN }}@github.com/Likushh/2d_platformer_backup.git master
 
+  # ОБНОВЛЕННЫЙ ЭТАП (ЛР №5): Сборка Docker с НАСТОЯЩЕЙ игрой
   build_docker_image:
-    needs: run_tests # ТЕПЕРЬ ЗАВИСИТ ОТ ТЕСТОВ
+    needs: build_game # Ждем реального билда!
     runs-on: ubuntu-latest
     permissions:
       contents: read
@@ -83,15 +119,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Create Compressed Placeholders for Docker
-        run: |
-          mkdir -p Builds/WebGL/Build
-          if [ -z "$(ls -A Builds/WebGL/Build)" ]; then
-            echo "<h3>Unity 6 Compressed Game Cloud Layer</h3>" > Builds/WebGL/index.html
-            touch Builds/WebGL/Build/game.framework.js.gz
-            touch Builds/WebGL/Build/game.wasm.gz
-            touch Builds/WebGL/Build/game.data.gz
-          fi
+      - name: Download WebGL Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: WebGL-Build
+          path: Builds/WebGL
 
       - name: Log in to GitHub Container Registry
         uses: docker/login-action@v3
@@ -109,3 +141,25 @@ jobs:
           tags: |
             ghcr.io/likushh/platformer-game:latest
             ghcr.io/likushh/platformer-game:${{ github.sha }}
+
+  # НОВЫЙ ЭТАП (ЛР №5): Деплой на GitHub Pages
+  deploy_to_pages:
+    needs: build_game
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download WebGL Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: WebGL-Build
+          path: Builds/WebGL
+
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          folder: Builds/WebGL
+          branch: gh-pages
